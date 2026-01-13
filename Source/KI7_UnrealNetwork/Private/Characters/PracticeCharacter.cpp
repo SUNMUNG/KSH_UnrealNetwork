@@ -17,6 +17,7 @@ APracticeCharacter::APracticeCharacter()
 	HealthBar->SetupAttachment(RootComponent);
 	HealthBar->SetDrawSize(FVector2D(300.0f, 50.0f));
 	HealthBar->SetWidgetSpace(EWidgetSpace::Screen);
+
 }
 
 // Called when the game starts or when spawned
@@ -39,7 +40,11 @@ void APracticeCharacter::BeginPlay()
 void APracticeCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
 
+	APlayerController* MYPC = GetWorld()->GetFirstPlayerController();
+	FRotator Rot = FRotator(0.0f,MYPC->PlayerCameraManager->GetCameraRotation().Yaw+180.0f,0.0f);
+	HealthBar->SetWorldRotation(Rot);
 	const FString Str = FString::Printf(TEXT("Lv(%d), Exp(%.1f), Health(%.1f)"), Level, Exp, Health);
 	DrawDebugString(GetWorld(), GetActorLocation(), Str, nullptr, FColor::White, 0.0f, true);
 }
