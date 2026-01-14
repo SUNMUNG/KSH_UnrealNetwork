@@ -16,10 +16,10 @@ public:
 	AReplicationCharacter();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION()
@@ -27,24 +27,23 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void TestSetLevel(int32 inLevel);
+	void TestSetLevel(int32 InLevel);
 
 	UFUNCTION(BlueprintCallable)
-	void TestSetHealth(float inHealth);
+	void TestSetHealth(float InHealth);
 
 	UFUNCTION(BlueprintCallable)
-	void TestSetExp(float inExp);
+	void TestSetExp(float InExp);
 
-	UPROPERTY(ReplicatedUsing = OnRepNotify_Level) //Level 이 리플리케이션될때마다 OnRepNotify_Level실행
+protected:
+	UPROPERTY(ReplicatedUsing = OnRepNotify_Level)	// Level이 리플리케이션 될 때마다 OnRepNotify_Level가 실행
 	int32 Level = 1;
 
-	UPROPERTY(Replicated)//리플리케이션이되지만 실행되는 함수없다
+	UPROPERTY(Replicated)	// 리플리케이션이 되지만 별도로 실행되는 함수는 없다.
 	float Health = 100.0f;
 
 	UPROPERTY(Replicated)
-	float Exp = 0.0f;
-
-public:	
+	float Exp = 0.0f;		
 
 
 };

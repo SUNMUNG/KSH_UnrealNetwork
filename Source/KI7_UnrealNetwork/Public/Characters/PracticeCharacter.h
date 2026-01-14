@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "InputAction.h"
 #include "PracticeCharacter.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnExpChanged, float, InExp);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelChanged, int32, InLevel);
+DECLARE_DELEGATE_OneParam(FOnLevelUpdated, int32);
+DECLARE_DELEGATE_OneParam(FOnExpUpdated, float);
+
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
 class KI7_UNREALNETWORK_API APracticeCharacter : public ACharacter
@@ -20,88 +22,54 @@ public:
 	APracticeCharacter();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION()
+	void OnKey1();
+
+	UFUNCTION()
+	void OnKey2();
+
+	UFUNCTION()
+	void OnKey3();
 
 private:
 	UFUNCTION()
-	void AddHealth();
-
-	UFUNCTION(Server, Reliable)
-	void ServerAddHealth();
+	void OnRef_Level();
 
 	UFUNCTION()
-	void AddExp();
-
-	UFUNCTION(Server, Reliable)
-	void ServerAddExp();
+	void OnRef_Exp();
 
 	UFUNCTION()
-	void AddLevel();
+	void OnRef_Health();
 
-	UFUNCTION(Server, Reliable)
-	void ServerAddLevel();
-
-
-	UFUNCTION()
-	void AddMaxHealth();
-
-	UFUNCTION(Server, Reliable)
-	void ServerAddMaxHealth();
-
-	UFUNCTION()
-	void OnRepNotify_Health();
-
-	UFUNCTION()
-	void OnRepNotify_MaxHealth();
-
-	UFUNCTION()
-	void OnRepNotify_Level1();
-
-	UFUNCTION()
-	void OnRepNotify_Exp();
+	void UpdateLevel();
+	void UpdateExp();
+	void UpdateHealth();
 
 public:
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRepNotify_Level1)
-	int32 Level = 1;
-
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRepNotify_Health)
-	float Health = 100.0f;
-
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRepNotify_MaxHealth)
-	float MaxHealth = 100.0f;
-
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRepNotify_Exp)
-	float Exp = 0.0f;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnExpChanged OnExpChanged;
-	UPROPERTY(BlueprintAssignable)
-	FOnLevelChanged OnLevelChanged;
+	FOnLevelUpdated OnLevelUpdated;
+	FOnExpUpdated OnExpUpdated;
 
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class UWidgetComponent> HealthWidgetComponent = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> IA_Health = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRef_Level, Category = "Stats")
+	int32 Level = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> IA_MaxHealth = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRef_Exp, Category = "Stats")
+	float Exp = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> IA_Exp = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> IA_Level = nullptr;
-
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
-	TObjectPtr<class UWidgetComponent> HealthBar = nullptr;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRef_Health, Category = "Stats")
+	float Health = 100.0f;
 
 private:
 	UPROPERTY()
-	TObjectPtr<class UHealthBar> BarWidget = nullptr;
+	TWeakObjectPtr<class UDataLineWidget> HealthWidget = nullptr;
 };

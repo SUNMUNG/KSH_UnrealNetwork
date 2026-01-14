@@ -2,161 +2,50 @@
 
 
 #include "Characters/PracticeCharacter.h"
-#include "EnhancedInputComponent.h"
-#include "UI/HealthBar.h"
-#include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Components/WidgetComponent.h"
+#include "UI/DataLineWidget.h"
+#include "Framework/PracticePlayerController.h"
+
 // Sets default values
 APracticeCharacter::APracticeCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	bReplicates = true;
-	HealthBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
-	HealthBar->SetupAttachment(RootComponent);
-	HealthBar->SetDrawSize(FVector2D(300.0f, 50.0f));
-	HealthBar->SetWidgetSpace(EWidgetSpace::Screen);
-
+	HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthWidget"));
+	HealthWidgetComponent->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
 void APracticeCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	BarWidget = Cast<UHealthBar>(HealthBar->GetWidget());
-	if (BarWidget)
-	{
-		BarWidget->SetCurrent(Health);
-		BarWidget->SetMax(MaxHealth);
-		BarWidget->SetHealthBar(Health/MaxHealth);
-	}
-	
 
+	if(HealthWidgetComponent && HealthWidgetComponent->GetWidget())
+	{
+		HealthWidget = Cast<UDataLineWidget>(HealthWidgetComponent->GetWidget());
+		HealthWidget->UpdateName(FText::FromString(TEXT("Health")));
+	}
 }
 
 // Called every frame
 void APracticeCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
 
-	APlayerController* MYPC = GetWorld()->GetFirstPlayerController();
-	FRotator Rot = FRotator(0.0f,MYPC->PlayerCameraManager->GetCameraRotation().Yaw+180.0f,0.0f);
-	HealthBar->SetWorldRotation(Rot);
-	const FString Str = FString::Printf(TEXT("Lv(%d), Exp(%.1f), Health(%.1f)"), Level, Exp, Health);
-	DrawDebugString(GetWorld(), GetActorLocation(), Str, nullptr, FColor::White, 0.0f, true);
-}
-
-void APracticeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(APracticeCharacter, Health); // Health 는 모두에게 리플리케이션
-	DOREPLIFETIME(APracticeCharacter, MaxHealth); // Health 는 모두에게 리플리케이션
-	DOREPLIFETIME_CONDITION(APracticeCharacter, Level, COND_OwnerOnly); // 오너에게만 리플리케이션
-	DOREPLIFETIME_CONDITION(APracticeCharacter, Exp, COND_OwnerOnly);
-}
-
-void APracticeCharacter::AddHealth()
-{
-	ServerAddHealth();
-}
-
-void APracticeCharacter::ServerAddHealth_Implementation()
-{
-	if (MaxHealth <= Health)
+	if (HealthWidgetComponent)
 	{
-		return;
-	}
-	else {
-		Health += 5.0f;
-	}
-	
+		APlayerController* PC = GetWorld()->GetFirstPlayerController();
+		if (PC && PC->PlayerCameraManager)
+		{
+			// 회전 -> 벡터 만들기 가능(해당 회전으로 인한 Forward 백터를 만듬)
+			// 벡터 -> 회전 만들기 가능
 
-	if (GetNetMode() == NM_ListenServer)
-	{
-		OnRepNotify_Health();
-	}
-	
-}
-
-void APracticeCharacter::AddExp()
-{
-	ServerAddExp();
-}
-
-void APracticeCharacter::ServerAddExp_Implementation()
-{
-	Exp += 2.0f;
-
-	if (GetNetMode() == NM_ListenServer)
-	{
-		OnRepNotify_Exp();
-	}
-}
-
-void APracticeCharacter::AddLevel()
-{
-	ServerAddLevel();
-
-
-}
-
-void APracticeCharacter::AddMaxHealth()
-{
-	ServerAddMaxHealth();
-}
-void APracticeCharacter::ServerAddMaxHealth_Implementation()
-{
-	 MaxHealth += 10.0f;
-
-	 if (GetNetMode() == NM_ListenServer)
-	 {
-		 OnRepNotify_MaxHealth();
-	 }
-}
-
-
-void APracticeCharacter::OnRepNotify_Health()
-{
-	if (BarWidget)
-	{
-		BarWidget->SetCurrent(Health);
-		BarWidget->SetHealthBar(Health / MaxHealth);
-	}
-}
-
-void APracticeCharacter::OnRepNotify_MaxHealth()
-{
-	if (BarWidget)
-	{
-		BarWidget->SetMax(MaxHealth);
-		BarWidget->SetHealthBar(Health / MaxHealth);
-	}
-}
-
-void APracticeCharacter::OnRepNotify_Level1()
-{
-	UE_LOG(LogTemp, Warning, TEXT("OnRepNotify_Level1"));
-	OnLevelChanged.Broadcast(Level);
-
-
-}
-
-void APracticeCharacter::OnRepNotify_Exp()
-{
-	OnExpChanged.Broadcast(Exp);
-}
-
-
-void APracticeCharacter::ServerAddLevel_Implementation()
-{
-	Level++;
-
-	if (GetNetMode() == NM_ListenServer)
-	{
-		OnRepNotify_Level1();
+			FVector CameraForward = PC->PlayerCameraManager->GetCameraRotation().Vector();	// 카메라의 Forward 백터
+			FVector WidgetForward = CameraForward * -1.0f;
+			HealthWidgetComponent->SetWorldRotation(WidgetForward.Rotation());
+		}
 	}
 }
 
@@ -164,26 +53,73 @@ void APracticeCharacter::ServerAddLevel_Implementation()
 void APracticeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
 
+void APracticeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(APracticeCharacter, Health);
+	DOREPLIFETIME_CONDITION(APracticeCharacter, Level, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(APracticeCharacter, Exp, COND_OwnerOnly);
+}
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+void APracticeCharacter::OnRef_Level()
+{
+	UpdateLevel();
+}
+
+void APracticeCharacter::OnRef_Exp()
+{
+	UpdateExp();
+}
+
+void APracticeCharacter::OnRef_Health()
+{
+	UpdateHealth();	// 클라이언트는 리플리케이션을 받아서 업데이트
+}
+
+void APracticeCharacter::UpdateLevel()
+{
+	OnLevelUpdated.Execute(Level);
+}
+
+void APracticeCharacter::UpdateExp()
+{
+	OnExpUpdated.Execute(Exp);
+}
+
+void APracticeCharacter::UpdateHealth()
+{
+	if (HealthWidget.IsValid())
 	{
-		if (IA_Health)
-		{
-			EnhancedInputComponent->BindAction(IA_Health, ETriggerEvent::Started, this, &APracticeCharacter::AddHealth);
-		}
-		if (IA_MaxHealth)
-		{
-			EnhancedInputComponent->BindAction(IA_MaxHealth, ETriggerEvent::Started, this, &APracticeCharacter::AddMaxHealth);
-		}
-		if (IA_Exp)
-		{
-			EnhancedInputComponent->BindAction(IA_Exp, ETriggerEvent::Started, this, &APracticeCharacter::AddExp);
-		}
-		if (IA_Level)
-		{
-			EnhancedInputComponent->BindAction(IA_Level, ETriggerEvent::Started, this, &APracticeCharacter::AddLevel);
-		}
+		HealthWidget->UpdateFloatValue(Health);
+	}
+}
+
+void APracticeCharacter::OnKey1()
+{
+	if (HasAuthority())
+	{
+		Level++;
+		UpdateLevel();
+	}
+}
+
+void APracticeCharacter::OnKey2()
+{
+	if (HasAuthority())
+	{
+		Exp += 1.0f;
+		UpdateExp();
+	}
+}
+
+void APracticeCharacter::OnKey3()
+{
+	if (HasAuthority())
+	{
+		Health -= 10.0f;
+		UpdateHealth();	// 서버는 직접 업데이트
 	}
 }
 
