@@ -40,7 +40,7 @@ void ANetProjectile::BeginPlay()
 
 	if (GetInstigator())
 	{
-		Collision->IgnoreActorWhenMoving(GetInstigator(), true);	// 인스티게이터가 설정되어 있으면 충돌 무시하기
+		Collision->IgnoreActorWhenMoving(GetInstigator(), true);	// 인스티게이터가 설정되어 있으면 충돌 무시하기		
 	}
 }
 
@@ -48,7 +48,8 @@ void ANetProjectile::OnHit(AActor* SelfActor, AActor* OtherActor, FVector Normal
 {
 	if (HasAuthority())	// 서버에서만 히트 처리
 	{
-		if (!bHitted &&  OtherActor->IsA<ACharacter>())	// 한번도 충돌한적 없고, 캐릭터와 캐릭터의 파생클래스만 처리
+		if (!bHitted &&  OtherActor->IsA<ACharacter>()	// 한번도 충돌한적 없고, 캐릭터와 캐릭터의 파생클래스만 처리
+			&& this != OtherActor && GetOwner() != OtherActor)	
 		{
 			// 데미지 주기
 			UGameplayStatics::ApplyDamage(OtherActor, 10.0f, GetInstigatorController(), this, UDamageType::StaticClass());

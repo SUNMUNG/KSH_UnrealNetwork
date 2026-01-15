@@ -3,6 +3,8 @@
 
 #include "Characters/RPCCharacter.h"
 #include "Camera/CameraShakeBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ARPCCharacter::ARPCCharacter()
@@ -37,6 +39,13 @@ void ARPCCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
+void ARPCCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ARPCCharacter, Health);
+}
+
 void ARPCCharacter::Fire()
 {
 	if (IsLocallyControlled())	// 내가 조종하는 캐릭터다.
@@ -49,6 +58,13 @@ void ARPCCharacter::OnTakeDamage(AActor* DamagedActor, float Damage, const UDama
 {
 	if (HasAuthority())
 	{
+		Health -= Damage;
+
+		if (IsLocallyControlled())
+		{
+			OnRef_Health();	// 서버는 리플리케이션이 없으므로 수동으로 UI 같은 것들 갱신
+		}
+
 		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("맞았음"));	
 		//APlayerController* PC = Cast<APlayerController>(GetController());
 		//GEngine->AddOnScreenDebugMessage(
@@ -87,11 +103,24 @@ void ARPCCharacter::Client_OnHit_Implementation()
 	FString RoleName = HasAuthority() ? TEXT("Server") : TEXT("Client");
 	FString ControllerName = GetController() ? GetController()->GetName() : TEXT("NoController");
 
-	GEngine->AddOnScreenDebugMessage(
-		-1, 5.0f, FColor::Red,
-		FString::Printf(TEXT("[%s] %s : 내가 맞았음"), *RoleName, *ControllerName)
-	);
+	//GEngine->AddOnScreenDebugMessage(
+	//	-1, 5.0f, FColor::Red,
+	//	FString::Printf(TEXT("[%s] %s : 내가 맞았음"), *RoleName, *ControllerName)
+	//);
 
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	PC->ClientStartCameraShake(CameraShakeClass);
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		GetWorld(), 
+		EffectClass, 
+		GetActorLocation() + FVector::UpVector * 100.0f, 
+		FRotator::ZeroRotator,
+		FVector::OneVector, true, true, ENCPoolMethod::AutoRelease);
+
+}
+
+void ARPCCharacter::OnRef_Health()
+{
+	UE_LOG(LogTemp, Log, TEXT("체력 : %.1f"), Health);
 }
