@@ -27,6 +27,8 @@ protected:
 
 public:
 	void SetMyName(const FString& NewName);
+
+	UFUNCTION(BlueprintCallable)
 	void UpdateNamePlate(const FString& NewName);
 
 public:

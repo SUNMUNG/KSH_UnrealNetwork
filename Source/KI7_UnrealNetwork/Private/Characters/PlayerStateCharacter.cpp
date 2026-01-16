@@ -11,7 +11,7 @@ APlayerStateCharacter::APlayerStateCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
 	NameWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("NamePlate"));
 	NameWidgetComponent->SetupAttachment(GetRootComponent());
 	NameWidgetComponent->SetRelativeLocation(FVector::UpVector * 105.0f);
@@ -24,6 +24,16 @@ void APlayerStateCharacter::BeginPlay()
 	if (NameWidgetComponent && NameWidgetComponent->GetWidget())
 	{
 		NameWidget = Cast<UDataLineWidget>(NameWidgetComponent->GetWidget());
+
+		//ATestPlayerState* PS = GetPlayerState<ATestPlayerState>();
+		//if (PS)
+		//{
+		//	NameWidget->UpdateName(FText::FromString(FString::Printf(TEXT("[%d]"), PS->GetPlayerId())));
+		//}
+		//else
+		//{
+		//	NameWidget->UpdateName(FText::FromString(TEXT("-")));
+		//}
 		NameWidget->UpdateName(FText::FromString(TEXT("-")));
 	}
 }
