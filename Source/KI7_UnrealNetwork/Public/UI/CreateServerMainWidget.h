@@ -26,13 +26,17 @@ protected:
 	void OnJoinButtonClicked();
 
 	UFUNCTION()
-	void OnTextComiited(const FText& NewText, ETextCommit::Type InTextCommit);
+	void OnDisconnectButtonClicked();
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UButton> CreateButton = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UButton> JoinButton = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+	TObjectPtr<UButton> DisconnectButton = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 	TObjectPtr<UEditableText> InputIPAddress = nullptr;

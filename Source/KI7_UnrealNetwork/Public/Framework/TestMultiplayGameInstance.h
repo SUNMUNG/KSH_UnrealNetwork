@@ -16,6 +16,8 @@ class KI7_UNREALNETWORK_API UTestMultiplayGameInstance : public UGameInstance
 public:
 	UTestMultiplayGameInstance();
 
+	virtual void Init() override;
+
 	void CreateServer();
 	void JoinServer(FString IPAddress);
 	void DisconnectServer();
@@ -24,6 +26,14 @@ public:
 		return ServerIP;
 			
 	}
+
+private:
+	UFUNCTION()
+	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
+
+	UFUNCTION()
+	void HandleTravelFailure(UWorld* World, ETravelFailure::Type FailureType, const FString& ErrorString);
+
 protected:
 	//서버IP
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Test")

@@ -20,10 +20,12 @@ void UCreateServerMainWidget::NativeConstruct()
 		JoinButton->OnClicked.AddDynamic(this, &UCreateServerMainWidget::OnJoinButtonClicked);
 	}
 
-	if (InputIPAddress)
+	if (DisconnectButton)
 	{
-		InputIPAddress->OnTextCommitted.AddDynamic(this, &UCreateServerMainWidget::OnTextComiited);
+		DisconnectButton->OnClicked.AddDynamic(this, &UCreateServerMainWidget::OnDisconnectButtonClicked);
 	}
+
+
 }
 
 
@@ -48,9 +50,16 @@ void UCreateServerMainWidget::OnJoinButtonClicked()
 
 }
 
-void UCreateServerMainWidget::OnTextComiited(const FText& NewText, ETextCommit::Type InTextCommit)
+void UCreateServerMainWidget::OnDisconnectButtonClicked()
 {
+	UTestMultiplayGameInstance* Instance = Cast<UTestMultiplayGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+
+	if (Instance)
+	{
+		Instance->DisconnectServer();
+	}
 }
+
 
 
 void UCreateServerMainWidget::OnCreateButtonClicked()

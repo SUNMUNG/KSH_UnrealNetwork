@@ -8,6 +8,17 @@ UTestMultiplayGameInstance::UTestMultiplayGameInstance()
 	ServerIP = "127.0.0.1";
 }
 
+void UTestMultiplayGameInstance::Init()
+{
+	Super::Init();
+
+	if (UEngine* engine = GetEngine())
+	{
+		engine->OnNetworkFailure().AddUObject(this, &UTestMultiplayGameInstance::HandleNetworkFailure);
+		engine->OnTravelFailure().AddUObject(this, &UTestMultiplayGameInstance::HandleTravelFailure);
+	}
+}
+
 void UTestMultiplayGameInstance::CreateServer()
 {
 	FString Mapname;
@@ -105,4 +116,33 @@ void UTestMultiplayGameInstance::DisconnectServer()
 	}
 
 
+}
+
+void UTestMultiplayGameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	UE_LOG(LogNet, Error, TEXT("HandleNetworkFailure 실행"));
+	UE_LOG(LogNet, Error, TEXT("오류 타입 : %d"),(int32)FailureType);
+	UE_LOG(LogNet, Error, TEXT("오류 메세지 : %s"),*ErrorString);
+	
+
+
+}
+
+void UTestMultiplayGameInstance::HandleTravelFailure(UWorld* World, ETravelFailure::Type FailureType, const FString& ErrorString)
+{
+	UE_LOG(LogNet, Error, TEXT("HandleTravelFailure 실행"));
+	UE_LOG(LogNet, Error, TEXT("오류 타입 : %d"), (int32)FailureType);
+	UE_LOG(LogNet, Error, TEXT("오류 메세지 : %s"), *ErrorString);
+
+	switch (FailureType)
+	{
+	case ETravelFailure::ServerTravelFailure:
+		if (ErrorString.Contains(TEXT("Full")) || ErrorString.Contains(TEXT("full")))
+		{
+			UE_LOG(LogNet, Error, TEXT("서버가 가득찼다."));
+		}
+			break;
+	default:
+		break;
+	}
 }
