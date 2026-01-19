@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GameStateMainHudWidget.generated.h"
 
+class UTextBlock;
 /**
  * 
  */
@@ -15,24 +16,24 @@ class KI7_UNREALNETWORK_API UGameStateMainHudWidget : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
+	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-	virtual void NativeConstruct() override; 
+
 	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void UpdateTimeDisplay();
 
-private:
-	UFUNCTION()
-	void ToggleGameOver();
+	UFUNCTION(BlueprintCallable, Category = "Game Data")
+	void UpdateGameOverDisplay();
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UTextBlock> TimeText = nullptr;
+	TObjectPtr<UTextBlock> ElapsedTimeText = nullptr;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UTextBlock> RemainTimeText = nullptr;
+	TObjectPtr<UTextBlock> RemainingTimeText = nullptr;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<class UTextBlock> GameOver = nullptr;
+	TObjectPtr<UTextBlock> GameOverText = nullptr;
 
 private:
 	TWeakObjectPtr<class ATestGameState> CachedGameState = nullptr;

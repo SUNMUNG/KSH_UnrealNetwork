@@ -6,31 +6,23 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/TextBlock.h"
 
-void UGameStateMainHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-	UpdateTimeDisplay();
-}
-
 void UGameStateMainHudWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	GameOverText->SetVisibility(ESlateVisibility::Hidden);
+}
 
+void UGameStateMainHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	
 	if (!CachedGameState.IsValid())
 	{
 		CachedGameState = Cast<ATestGameState>(UGameplayStatics::GetGameState(this));
 	}
 
-	if (GameOver)
-	{
-		GameOver->SetVisibility(ESlateVisibility::Hidden);
-		UE_LOG(LogTemp, Warning, TEXT("Hidden"));
-	}
-
-	if (CachedGameState.IsValid())
-	{
-		CachedGameState->OnGameOver.AddDynamic(this, &UGameStateMainHudWidget::ToggleGameOver);
-	}
+	UpdateTimeDisplay();
+	UpdateGameOverDisplay();
 }
 
 void UGameStateMainHudWidget::UpdateTimeDisplay()
@@ -40,25 +32,23 @@ void UGameStateMainHudWidget::UpdateTimeDisplay()
 		int32 Total = FMath::FloorToInt(CachedGameState->GetGameElapsedTime());
 		int32 Minutes = Total / 60;
 		int32 Seconds = Total % 60;
+		ElapsedTimeText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds)));
 
-		TimeText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds)));
-	}
-
-	if (CachedGameState.IsValid())
-	{
-		int32 Total = FMath::FloorToInt(CachedGameState->GetGameOverTime());
-		int32 Minutes = Total / 60;
-		int32 Seconds = Total % 60;
-
-		RemainTimeText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds)));
+		Total = FMath::FloorToInt(CachedGameState->GetGameRemainingTime());
+		Minutes = Total / 60;
+		Seconds = Total % 60;
+		RemainingTimeText->SetText(FText::FromString(FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds)));
 	}
 }
 
-void UGameStateMainHudWidget::ToggleGameOver()
+void UGameStateMainHudWidget::UpdateGameOverDisplay()
 {
-	if (GameOver)
+	if (CachedGameState.IsValid() && CachedGameState->IsGameOver())
 	{
-		GameOver->SetVisibility(ESlateVisibility::Visible);
-		UE_LOG(LogTemp, Warning, TEXT("Visible"));
+		GameOverText->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	else
+	{
+		GameOverText->SetVisibility(ESlateVisibility::Hidden);
 	}
 }

@@ -9,31 +9,30 @@ ATestGameState::ATestGameState()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+void ATestGameState::BeginPlay()
+{
+	Super::BeginPlay();
+	GameRemainingTime = GameDuration;
+
+	//PlayerArray.Num();	// 접속인원수
+}
+
 void ATestGameState::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (HasAuthority())
+	if (HasAuthority() && !bGameOver)
 	{
 		GameElapsedTime += DeltaTime;
+		//UE_LOG(LogTemp, Log, TEXT("Time update : %.2f"), GameElapsedTime);
 
-		if (!isGameOver) {
-			if (GameOverTime >= 0.0f)
-			{
-				GameOverTime -= DeltaTime;
-				UE_LOG(LogTemp, Log, TEXT("GameOverTime : %.2f"), GameOverTime);
-			}
-			else {
-				GameOverTime = 0.0f;
-				isGameOver = true;
-				OnGameOver.Broadcast();
-				UE_LOG(LogTemp, Log, TEXT("GameOver"));
-			}
+		GameRemainingTime -= DeltaTime;
+
+		if (GameRemainingTime < 0.0f)
+		{
+			GameRemainingTime = 0.0f;
+			bGameOver = true;
 		}
-		
-		
-		UE_LOG(LogTemp, Log, TEXT("Time update : %.2f"), GameElapsedTime);
-
 	}
 }
 
@@ -42,5 +41,6 @@ void ATestGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATestGameState, GameElapsedTime);
-	DOREPLIFETIME(ATestGameState, GameOverTime);
+	DOREPLIFETIME(ATestGameState, GameRemainingTime);
+	DOREPLIFETIME(ATestGameState, bGameOver);
 }

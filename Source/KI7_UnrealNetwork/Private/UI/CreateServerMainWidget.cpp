@@ -2,13 +2,13 @@
 
 
 #include "UI/CreateServerMainWidget.h"
-#include "Kismet/GameplayStatics.h"
-#include "Framework/TestMultiplayGameInstance.h"
 #include "Components/Button.h"
-#include "Components/EditableText.h"
+#include "Components/EditableTextBox.h"
+#include "Framework/TestMultiplayGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+
 void UCreateServerMainWidget::NativeConstruct()
 {
-	
 	Super::NativeConstruct();
 	if (CreateButton)
 	{
@@ -24,50 +24,41 @@ void UCreateServerMainWidget::NativeConstruct()
 	{
 		DisconnectButton->OnClicked.AddDynamic(this, &UCreateServerMainWidget::OnDisconnectButtonClicked);
 	}
-
-
 }
 
+void UCreateServerMainWidget::OnCreateButtonClicked()
+{
+	UTestMultiplayGameInstance* GI = Cast<UTestMultiplayGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GI)
+	{
+		GI->CreateServer();
+	}
+}
 
 void UCreateServerMainWidget::OnJoinButtonClicked()
 {
-	UTestMultiplayGameInstance* Instance = Cast<UTestMultiplayGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-
-	if (Instance)
+	UTestMultiplayGameInstance* GI = Cast<UTestMultiplayGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GI)
 	{
-		FString IPAddress = Instance->GetIPAddress();
+		FString IPAddress = GI->GetIPAddress();
 		if (InputIPAddress)
 		{
 			FString InputIP = InputIPAddress->GetText().ToString();
-
 			if (!InputIP.IsEmpty())
 			{
 				IPAddress = InputIP;
 			}
 		}
-		Instance->JoinServer(IPAddress);
-	}
 
+		GI->JoinServer(IPAddress);
+	}
 }
 
 void UCreateServerMainWidget::OnDisconnectButtonClicked()
 {
-	UTestMultiplayGameInstance* Instance = Cast<UTestMultiplayGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-
-	if (Instance)
+	UTestMultiplayGameInstance* GI = Cast<UTestMultiplayGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GI)
 	{
-		Instance->DisconnectServer();
-	}
-}
-
-
-
-void UCreateServerMainWidget::OnCreateButtonClicked()
-{
-	UTestMultiplayGameInstance* Instance = Cast<UTestMultiplayGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-
-	if (Instance)
-	{
-		Instance->CreateServer();
+		GI->DisconnectServer();
 	}
 }

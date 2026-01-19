@@ -5,8 +5,9 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "CreateServerMainWidget.generated.h"
+
 class UButton;
-class UEditableText;
+class UEditableTextBox;
 /**
  * 
  */
@@ -16,7 +17,6 @@ class KI7_UNREALNETWORK_API UCreateServerMainWidget : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
-
 	virtual void NativeConstruct() override;
 
 	UFUNCTION()
@@ -29,16 +29,15 @@ protected:
 	void OnDisconnectButtonClicked();
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> CreateButton = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> JoinButton = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> DisconnectButton = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	TObjectPtr<UEditableText> InputIPAddress = nullptr;
-
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UEditableTextBox> InputIPAddress = nullptr;
 };

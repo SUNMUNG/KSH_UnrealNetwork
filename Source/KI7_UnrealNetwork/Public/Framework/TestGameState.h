@@ -6,7 +6,6 @@
 #include "GameFramework/GameStateBase.h"
 #include "TestGameState.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameOver);
 /**
  * 
  */
@@ -19,24 +18,25 @@ public:
 	ATestGameState();
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
 	inline float GetGameElapsedTime() const { return GameElapsedTime; }
-	inline float GetGameOverTime() const { return GameOverTime; }
-
-public:
-
-	FOnGameOver OnGameOver;
+	inline float GetGameRemainingTime() const { return GameRemainingTime; }
+	inline bool IsGameOver() const { return bGameOver; }
 
 protected:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game Data")
 	float GameElapsedTime = 0.0f;
 
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game Data")
-	float GameOverTime = 5.0f;
-private:
-	bool isGameOver = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Data")
+	float GameDuration = 10.0f;	// 게임 1판 시간. GameMode에 추가하는 것이 적합함(지금은 테스트용)
 
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game Data")
+	float GameRemainingTime = 0.0f;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Game Data")
+	bool bGameOver = false;
 };
